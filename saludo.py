@@ -25,15 +25,41 @@ def encontrar_medida(texto):
 
 def interpretar_anotacion(anotacion):
 	"""Convierte una anotación informal en una fila ordenada."""
+	coincidencia_variantes = re.search(
+		r"^(.*?)\s*\(\s*(\d+)\s+([a-záéíóúñ]+)\s+y\s+(\d+)\s+([a-záéíóúñ]+)\s*\)$",
+		anotacion,
+		re.IGNORECASE,
+	)
+
+	if coincidencia_variantes:
+		producto = coincidencia_variantes.group(1).strip()
+		filas = []
+		for cantidad, variante in (
+			(coincidencia_variantes.group(2), coincidencia_variantes.group(3)),
+			(coincidencia_variantes.group(4), coincidencia_variantes.group(5)),
+		):
+			filas.append(
+				{
+					"Producto": producto,
+					"Medida": "Sin medida",
+					"Variante": variante,
+					"Cantidad": int(cantidad),
+					"Unidad": "unidad",
+					"Proveedor a consultar": "Pendiente",
+					"Información faltante": "Confirmar cantidad y proveedor",
+				}
+			)
+		return filas
+
 	coincidencia_cantidad = re.search(
-		r"-\s*(\d+)\s+([a-záéíóúüñ]+)\s*$",
+		r"\((\d+)(?:\s+([a-záéíóúñ]+))?\)\s*$",
 		anotacion,
 		re.IGNORECASE,
 	)
 
 	if coincidencia_cantidad:
 		cantidad = int(coincidencia_cantidad.group(1))
-		unidad = coincidencia_cantidad.group(2)
+		unidad = coincidencia_cantidad.group(2) or "unidad"
 		anotacion_sin_cantidad = anotacion[:coincidencia_cantidad.start()].strip()
 	else:
 		cantidad = 1
@@ -100,7 +126,11 @@ def main():
 		if not anotacion:
 			break
 
-		filas.append(interpretar_anotacion(anotacion))
+		resultado = interpretar_anotacion(anotacion)
+		if isinstance(resultado, list):
+			filas.extend(resultado)
+		else:
+			filas.append(resultado)
 
 	if filas:
 		mostrar_tabla(filas)
