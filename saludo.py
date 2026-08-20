@@ -116,10 +116,29 @@ def mostrar_tabla(filas):
         print(" | ".join(str(fila[columna]).ljust(anchos[columna]) for columna in COLUMNAS))
 
 def guardar_csv(filas):
+    filas_para_csv = []
+    for fila in filas:
+        fila_csv = fila.copy()
+        if fila_csv["Medida"] != "Sin medida":
+            fila_csv["Medida"] = f'="{fila_csv["Medida"]}"'
+        filas_para_csv.append(fila_csv)
+
     with open("inventario_organizado.csv", "w", newline="", encoding="utf-8-sig") as archivo:
         escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS, delimiter=";")
         escritor.writeheader()
-        escritor.writerows(filas)
+        escritor.writerows(filas_para_csv)
+
+
+def es_comando_de_ejecucion(texto):
+    """Evita guardar como producto las líneas que muestra la terminal."""
+    texto_normalizado = texto.lower().replace("/", "\\")
+    return (
+        "python.exe" in texto_normalizado
+        or "python " in texto_normalizado
+        or "saludo.py" in texto_normalizado
+        or texto_normalizado.startswith("c:\\users\\")
+    )
+
 
 def main():
     print("Escribí una anotación por línea.")
@@ -132,18 +151,23 @@ def main():
         if not anotacion:
             break
 
+        if es_comando_de_ejecucion(anotacion):
+            print("Esa línea es un comando de la terminal y no se guardó.")
+            continue
+
         resultado = interpretar_anotacion(anotacion)
         if isinstance(resultado, list):
             filas.extend(resultado)
         else:
             filas.append(resultado)
 
-        if filas:
-            mostrar_tabla(filas)
-            guardar_csv(filas)
-            print("\nInventario guardado en inventario_organizado.csv")
-        else:
-            print("No se ingresaron productos.")
+    guardar_csv(filas)
+
+    if filas:
+        mostrar_tabla(filas)
+        print("\nInventario guardado en inventario_organizado.csv")
+    else:
+        print("No se ingresaron productos. Se creó un CSV vacío con los encabezados.")
 
 
 if __name__ == "__main__":
