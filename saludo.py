@@ -88,8 +88,8 @@ def clasificar_producto(producto):
 
 
 def encontrar_medida(texto):
-    """Busca una medida simple, como 3 mm, 3\" o 3/4."""
-    patron = r"(?:\d+(?:\s+\d+/\d+)?\s*(?:mm|cm|m|[\"'])|\d+/\d+)"
+    """Busca medidas como 3 mm, 20 W, 3/4 o 'de 30'."""
+    patron = r"(?:\d+(?:\s+\d+/\d+)?\s*(?:mm|cm|m|w|pulgadas?|[\"'])|\bde\s+\d+\b|\d+/\d+)"
     resultado = re.search(patron, texto, re.IGNORECASE)
     if resultado is None:
         return ""
@@ -150,12 +150,14 @@ def interpretar_anotacion(anotacion):
 
     partes = [parte.strip() for parte in anotacion_sin_cantidad.split("-") if parte.strip()]
     coincidencia = re.search(
-        r"(?:\d+(?:\s+\d+/\d+)?\s*(?:mm|cm|m|pulgadas?|[\"'])|\d+/\d+)",
+        r"(?:\d+(?:\s+\d+/\d+)?\s*(?:mm|cm|m|w|pulgadas?|[\"'])|\bde\s+\d+\b|\d+/\d+)",
         anotacion_sin_cantidad,
         re.IGNORECASE,
     )
     raw_medida = coincidencia.group(0).strip() if coincidencia else ""
     medida = re.sub(r"\s*pulgadas?\s*$", '"', raw_medida, flags=re.IGNORECASE)
+    medida = re.sub(r"^de\s+", "", medida, flags=re.IGNORECASE)
+    medida = re.sub(r"\s*w$", " W", medida, flags=re.IGNORECASE)
 
     producto = partes[0] if partes else anotacion.strip()
     texto_despues_de_medida = ""
