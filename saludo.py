@@ -98,6 +98,29 @@ def encontrar_medida(texto):
 
 def interpretar_anotacion(anotacion):
     """Convierte una anotación informal en una fila ordenada."""
+    coincidencia_lista_medidas = re.search(
+        r"^(.*?)\s+(\d+\s*x\s*\d+(?:\s*,\s*\d+\s*x\s*\d+)+)\s*$",
+        anotacion,
+        re.IGNORECASE,
+    )
+
+    if coincidencia_lista_medidas:
+        producto = coincidencia_lista_medidas.group(1).strip()
+        medidas = re.findall(r"\d+\s*x\s*\d+", coincidencia_lista_medidas.group(2))
+        return [
+            {
+                "Producto": producto,
+                "Medida": medida.replace(" ", ""),
+                "Tipo": "Sin tipo",
+                "Categoría": clasificar_producto(producto),
+                "Cantidad": 1,
+                "Unidad": "unidad",
+                "Proveedor a consultar": "Pendiente",
+                "Información faltante": "Confirmar cantidad y proveedor",
+            }
+            for medida in medidas
+        ]
+
     coincidencia_variantes = re.search(
         r"^(.*?)\s*\(?\s*(\d+)\s+([a-záéíóúñ]+)\s+y\s+(\d+)\s+([a-záéíóúñ]+)\s*\)?\s*$",
         anotacion,
