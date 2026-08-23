@@ -15,8 +15,66 @@ COLUMNAS = [
 
 
 CATEGORIAS_POR_PALABRA = {
+    # Electricidad e iluminación
+    "caño corrugado": "Electricidad e iluminación",
+    "reflector": "Electricidad e iluminación",
+    "sensor de movimiento": "Electricidad e iluminación",
+    "unidad magnética": "Electricidad e iluminación",
+    "unidad magneticas": "Electricidad e iluminación",
+    "cable de estufa": "Electricidad e iluminación",
+    "cables de estufas": "Electricidad e iluminación",
+    "cinta aisladora": "Electricidad e iluminación",
+    # Gas y calefacción
+    "resistencia calefon": "Gas y calefacción",
+    "calentador de mate": "Gas y calefacción",
+    "calendatdr de mate": "Gas y calefacción",
+    "magiclick": "Gas y calefacción",
+    "maglickik": "Gas y calefacción",
+    "termocupla": "Gas y calefacción",
+    "enchufe calefon": "Gas y calefacción",
+    "ducha de calefon": "Gas y calefacción",
+    "regulador": "Gas y calefacción",
+    "regulardor": "Gas y calefacción",
+    "flexible de gas": "Gas y calefacción",
+    # Sanitarios y plomería
+    "extractor": "Sanitarios y plomería",
+    "pegamento pvc": "Sanitarios y plomería",
+    "cañamo": "Sanitarios y plomería",
+    # Pintura
+    "pincel": "Pintura",
+    "pinceleta": "Pintura",
+    "rodillo": "Pintura",
+    # Seguridad industrial
+    "porta martillo": "Seguridad industrial",
+    "faja de seguridad": "Seguridad industrial",
+    "auricular de casco": "Seguridad industrial",
+    "zapato de seguridad": "Seguridad industrial",
+    # Herramientas y accesorios
+    "cabo de": "Herramientas y accesorios",
+    "sierra circular": "Herramientas y accesorios",
+    "piedra de banco": "Herramientas y accesorios",
+    "arco cerrucho": "Herramientas y accesorios",
+    "puntas biassoni": "Herramientas y accesorios",
+    "corta hierro": "Herramientas y accesorios",
+    "corta guierro": "Herramientas y accesorios",
+    "grifa": "Herramientas y accesorios",
+    "grinfa": "Herramientas y accesorios",
+    "escuadra": "Herramientas y accesorios",
+    # Construcción y albañilería
+    "tanza de albañil": "Construcción y albañilería",
+    "balde de albañil": "Construcción y albañilería",
+    "baldes de albañil": "Construcción y albañilería",
+    "precinto": "Construcción y albañilería",
+    # Adhesivos, lubricantes y consumibles
+    "polvo epoxi": "Adhesivos, lubricantes y consumibles",
+    "grasa grafitada": "Adhesivos, lubricantes y consumibles",
+    "glicerina": "Adhesivos, lubricantes y consumibles",
+    "vela para soldar": "Adhesivos, lubricantes y consumibles",
+    # Varios
+    "pico de pelota": "Varios",
+    # Reglas generales que deben evaluarse al final
     "tanza": "Productos de Jardinería",
-    "caño corrugado": "Productos de Construcción",
+    "enchufe": "Electricidad e iluminación",
 }
 
 
