@@ -99,7 +99,7 @@ def encontrar_medida(texto):
 def interpretar_anotacion(anotacion):
     """Convierte una anotación informal en una fila ordenada."""
     coincidencia_variantes = re.search(
-        r"^(.*?)\s*\(\s*(\d+)\s+([a-záéíóúñ]+)\s+y\s+(\d+)\s+([a-záéíóúñ]+)\s*\)$",
+        r"^(.*?)\s*\(?\s*(\d+)\s+([a-záéíóúñ]+)\s+y\s+(\d+)\s+([a-záéíóúñ]+)\s*\)?\s*$",
         anotacion,
         re.IGNORECASE,
     )
