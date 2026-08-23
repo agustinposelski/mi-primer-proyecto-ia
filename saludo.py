@@ -1,11 +1,12 @@
 import re
-import csv 
+import csv
 
 
 COLUMNAS = [
     "Producto",
     "Medida",
-    "Variante",
+    "Tipo",
+    "Categoría",
     "Cantidad",
     "Unidad",
     "Proveedor a consultar",
@@ -13,14 +14,27 @@ COLUMNAS = [
 ]
 
 
+CATEGORIAS_POR_PALABRA = {
+    "tanza": "Productos de Jardinería",
+    "caño corrugado": "Productos de Construcción",
+}
+
+
+def clasificar_producto(producto):
+    """Asigna una categoría conocida o deja el producto pendiente de clasificar."""
+    producto_normalizado = producto.lower()
+    for palabra, categoria in CATEGORIAS_POR_PALABRA.items():
+        if palabra in producto_normalizado:
+            return categoria
+    return "Sin categoría"
+
+
 def encontrar_medida(texto):
     """Busca una medida simple, como 3 mm, 3\" o 3/4."""
     patron = r"(?:\d+(?:\s+\d+/\d+)?\s*(?:mm|cm|m|[\"'])|\d+/\d+)"
     resultado = re.search(patron, texto, re.IGNORECASE)
-
     if resultado is None:
         return ""
-
     return resultado.group(0).strip()
 
 
@@ -31,7 +45,6 @@ def interpretar_anotacion(anotacion):
         anotacion,
         re.IGNORECASE,
     )
-
     if coincidencia_variantes:
         producto = coincidencia_variantes.group(1).strip()
         filas = []
@@ -43,7 +56,8 @@ def interpretar_anotacion(anotacion):
                 {
                     "Producto": producto,
                     "Medida": "Sin medida",
-                    "Variante": variante,
+                    "Tipo": variante,
+                    "Categoría": clasificar_producto(producto),
                     "Cantidad": int(cantidad),
                     "Unidad": "unidad",
                     "Proveedor a consultar": "Pendiente",
@@ -52,16 +66,25 @@ def interpretar_anotacion(anotacion):
             )
         return filas
 
-    coincidencia_cantidad = re.search(
+    coincidencia_cantidad_parentesis = re.search(
         r"\((\d+)(?:\s+([a-záéíóúñ]+))?\)\s*$",
         anotacion,
         re.IGNORECASE,
     )
+    coincidencia_cantidad_final = re.search(
+        r"(?:\s*-\s*|\s+)(\d+)\s+([a-záéíóúñ]+)\s*$",
+        anotacion,
+        re.IGNORECASE,
+    )
 
-    if coincidencia_cantidad:
-        cantidad = int(coincidencia_cantidad.group(1))
-        unidad = coincidencia_cantidad.group(2) or "unidad"
-        anotacion_sin_cantidad = anotacion[:coincidencia_cantidad.start()].strip()
+    if coincidencia_cantidad_parentesis:
+        cantidad = int(coincidencia_cantidad_parentesis.group(1))
+        unidad = coincidencia_cantidad_parentesis.group(2) or "unidad"
+        anotacion_sin_cantidad = anotacion[:coincidencia_cantidad_parentesis.start()].strip()
+    elif coincidencia_cantidad_final:
+        cantidad = int(coincidencia_cantidad_final.group(1))
+        unidad = coincidencia_cantidad_final.group(2)
+        anotacion_sin_cantidad = anotacion[:coincidencia_cantidad_final.start()].strip()
     else:
         cantidad = 1
         unidad = "unidad"
@@ -86,12 +109,13 @@ def interpretar_anotacion(anotacion):
     variantes = [variante for variante in partes[1:] if variante not in (raw_medida, medida)]
     if texto_despues_de_medida and len(partes) == 1:
         variantes.append(texto_despues_de_medida)
-    variante = " - ".join(variantes)
+    tipo = " - ".join(variantes)
 
     return {
         "Producto": producto,
         "Medida": medida or "Sin medida",
-        "Variante": variante or "Sin variante",
+        "Tipo": tipo or "Sin tipo",
+        "Categoría": clasificar_producto(producto),
         "Cantidad": cantidad,
         "Unidad": unidad,
         "Proveedor a consultar": "Pendiente",
@@ -101,19 +125,14 @@ def interpretar_anotacion(anotacion):
 
 def mostrar_tabla(filas):
     """Muestra las filas con las columnas alineadas."""
-    anchos = {
-        columna: max(len(columna), *(len(str(fila[columna])) for fila in filas))
-        for columna in COLUMNAS
-    }
-
+    anchos = {columna: max(len(columna), *(len(str(fila[columna])) for fila in filas)) for columna in COLUMNAS}
     encabezado = " | ".join(columna.ljust(anchos[columna]) for columna in COLUMNAS)
     separador = "-+-".join("-" * anchos[columna] for columna in COLUMNAS)
-
     print("\n" + encabezado)
     print(separador)
-
     for fila in filas:
         print(" | ".join(str(fila[columna]).ljust(anchos[columna]) for columna in COLUMNAS))
+
 
 def guardar_csv(filas):
     filas_para_csv = []
@@ -122,7 +141,6 @@ def guardar_csv(filas):
         if fila_csv["Medida"] != "Sin medida":
             fila_csv["Medida"] = f'="{fila_csv["Medida"]}"'
         filas_para_csv.append(fila_csv)
-
     with open("inventario_organizado.csv", "w", newline="", encoding="utf-8-sig") as archivo:
         escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS, delimiter=";")
         escritor.writeheader()
@@ -143,26 +161,20 @@ def es_comando_de_ejecucion(texto):
 def main():
     print("Escribí una anotación por línea.")
     print("Cuando termines, presioná Enter en una línea vacía.\n")
-
     filas = []
     while True:
         anotacion = input("> ").strip()
-
         if not anotacion:
             break
-
         if es_comando_de_ejecucion(anotacion):
             print("Esa línea es un comando de la terminal y no se guardó.")
             continue
-
         resultado = interpretar_anotacion(anotacion)
         if isinstance(resultado, list):
             filas.extend(resultado)
         else:
             filas.append(resultado)
-
     guardar_csv(filas)
-
     if filas:
         mostrar_tabla(filas)
         print("\nInventario guardado en inventario_organizado.csv")
