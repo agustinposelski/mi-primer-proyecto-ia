@@ -28,11 +28,14 @@ class AplicacionInventario:
     def __init__(self, ventana):
         self.ventana = ventana
         self.ventana.title("Ferretería Don Nicola - Inventario")
-        self.ventana.geometry("1080x650")
+        self.ventana.geometry("1080x760")
         self.ventana.minsize(800, 500)
         self.filas = []
         self.producto_a_clasificar = tk.StringVar()
         self.categoria_elegida = tk.StringVar()
+        self.producto_para_precio = tk.StringVar()
+        self.costo_producto = tk.StringVar()
+        self.recargo_producto = tk.StringVar(value="40")
         self.crear_interfaz()
 
     def crear_interfaz(self):
@@ -96,6 +99,22 @@ class AplicacionInventario:
         clasificacion.columnconfigure(1, weight=1)
         clasificacion.columnconfigure(3, weight=1)
 
+        precios = ttk.LabelFrame(contenedor, text="Calcular precio de venta", padding=10)
+        precios.pack(fill="x", pady=(10, 0))
+        ttk.Label(precios, text="Producto:").grid(row=0, column=0, sticky="w")
+        self.selector_precio = ttk.Combobox(
+            precios, textvariable=self.producto_para_precio, state="readonly", width=28
+        )
+        self.selector_precio.grid(row=0, column=1, padx=8, sticky="ew")
+        ttk.Label(precios, text="Costo ($):").grid(row=0, column=2, sticky="w")
+        ttk.Entry(precios, textvariable=self.costo_producto, width=14).grid(row=0, column=3, padx=8)
+        ttk.Label(precios, text="Recargo (%):").grid(row=0, column=4, sticky="w")
+        ttk.Entry(precios, textvariable=self.recargo_producto, width=8).grid(row=0, column=5, padx=8)
+        ttk.Button(precios, text="Calcular", command=self.calcular_precio).grid(row=0, column=6)
+        self.resultado_precio = ttk.Label(precios, text="Ingresá un costo para calcular el precio sugerido.")
+        self.resultado_precio.grid(row=1, column=0, columnspan=7, pady=(8, 0), sticky="w")
+        precios.columnconfigure(1, weight=1)
+
     def procesar_inventario(self):
         anotaciones = self.entrada.get("1.0", "end").strip().splitlines()
         self.filas = []
@@ -118,6 +137,9 @@ class AplicacionInventario:
         pendientes = sorted({fila["Producto"] for fila in self.filas if fila["Categoría"] == "Sin categoría"})
         self.selector_producto["values"] = pendientes
         self.producto_a_clasificar.set(pendientes[0] if pendientes else "")
+        productos = sorted({fila["Producto"] for fila in self.filas})
+        self.selector_precio["values"] = productos
+        self.producto_para_precio.set(productos[0] if productos else "")
         cantidad = len(self.filas)
         self.estado.config(
             text=f"Se procesaron {cantidad} producto(s). El CSV se guardó automáticamente como inventario_organizado.csv."
@@ -131,6 +153,10 @@ class AplicacionInventario:
         self.estado.config(text="Podés escribir nuevas anotaciones.")
         self.selector_producto["values"] = []
         self.producto_a_clasificar.set("")
+        self.selector_precio["values"] = []
+        self.producto_para_precio.set("")
+        self.costo_producto.set("")
+        self.resultado_precio.config(text="Ingresá un costo para calcular el precio sugerido.")
 
     def guardar_categoria(self):
         producto = self.producto_a_clasificar.get()
@@ -143,6 +169,38 @@ class AplicacionInventario:
         self.procesar_inventario()
         self.categoria_elegida.set("")
         self.estado.config(f'"{producto}" quedó guardado en el catálogo como "{categoria}".')
+
+    def calcular_precio(self):
+        producto = self.producto_para_precio.get()
+        try:
+            costo = self.convertir_numero(self.costo_producto.get())
+            recargo = self.convertir_numero(self.recargo_producto.get())
+        except ValueError:
+            self.resultado_precio.config(text="Ingresá números válidos para costo y recargo.")
+            return
+
+        if not producto or costo <= 0 or recargo < 0:
+            self.resultado_precio.config(text="Elegí un producto e ingresá un costo positivo.")
+            return
+
+        precio_sugerido = round(costo * (1 + recargo / 100))
+        self.resultado_precio.config(
+            text=(
+                f"{producto}: costo ${self.formatear_moneda(costo)} + {recargo:g}% "
+                f"= precio sugerido ${self.formatear_moneda(precio_sugerido)}"
+            )
+        )
+
+    @staticmethod
+    def convertir_numero(texto):
+        texto = texto.strip().replace("$", "").replace(" ", "")
+        if "," in texto:
+            texto = texto.replace(".", "").replace(",", ".")
+        return float(texto)
+
+    @staticmethod
+    def formatear_moneda(valor):
+        return f"{valor:,.0f}".replace(",", ".")
 
 
 if __name__ == "__main__":
