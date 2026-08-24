@@ -6,6 +6,8 @@ original: suma una forma más cómoda de usarlo.
 
 import tkinter as tk
 from tkinter import ttk
+import csv
+from pathlib import Path
 
 from saludo import COLUMNAS, guardar_categoria_en_catalogo, guardar_csv, interpretar_anotacion
 
@@ -23,6 +25,8 @@ CATEGORIAS_DISPONIBLES = [
     "Varios",
 ]
 
+ARCHIVO_PRECIOS = Path(__file__).with_name("precios_productos.csv")
+
 
 class AplicacionInventario:
     def __init__(self, ventana):
@@ -36,6 +40,7 @@ class AplicacionInventario:
         self.producto_para_precio = tk.StringVar()
         self.costo_producto = tk.StringVar()
         self.recargo_producto = tk.StringVar(value="40")
+        self.precios_guardados = self.cargar_precios()
         self.crear_interfaz()
 
     def crear_interfaz(self):
@@ -106,11 +111,13 @@ class AplicacionInventario:
             precios, textvariable=self.producto_para_precio, state="readonly", width=28
         )
         self.selector_precio.grid(row=0, column=1, padx=8, sticky="ew")
+        self.selector_precio.bind("<<ComboboxSelected>>", self.cargar_precio_del_producto)
         ttk.Label(precios, text="Costo ($):").grid(row=0, column=2, sticky="w")
         ttk.Entry(precios, textvariable=self.costo_producto, width=14).grid(row=0, column=3, padx=8)
         ttk.Label(precios, text="Recargo (%):").grid(row=0, column=4, sticky="w")
         ttk.Entry(precios, textvariable=self.recargo_producto, width=8).grid(row=0, column=5, padx=8)
         ttk.Button(precios, text="Calcular", command=self.calcular_precio).grid(row=0, column=6)
+        ttk.Button(precios, text="Guardar precio", command=self.guardar_precio).grid(row=0, column=7, padx=(8, 0))
         self.resultado_precio = ttk.Label(precios, text="Ingresá un costo para calcular el precio sugerido.")
         self.resultado_precio.grid(row=1, column=0, columnspan=7, pady=(8, 0), sticky="w")
         precios.columnconfigure(1, weight=1)
@@ -140,6 +147,7 @@ class AplicacionInventario:
         productos = sorted({fila["Producto"] for fila in self.filas})
         self.selector_precio["values"] = productos
         self.producto_para_precio.set(productos[0] if productos else "")
+        self.cargar_precio_del_producto()
         cantidad = len(self.filas)
         self.estado.config(
             text=f"Se procesaron {cantidad} producto(s). El CSV se guardó automáticamente como inventario_organizado.csv."
@@ -189,6 +197,53 @@ class AplicacionInventario:
                 f"{producto}: costo ${self.formatear_moneda(costo)} + {recargo:g}% "
                 f"= precio sugerido ${self.formatear_moneda(precio_sugerido)}"
             )
+        )
+
+    def cargar_precios(self):
+        if not ARCHIVO_PRECIOS.exists():
+            return {}
+        with ARCHIVO_PRECIOS.open(encoding="utf-8-sig", newline="") as archivo:
+            lector = csv.DictReader(archivo, delimiter=";")
+            return {fila["Producto"].lower(): fila for fila in lector}
+
+    def cargar_precio_del_producto(self, evento=None):
+        producto = self.producto_para_precio.get()
+        precio = self.precios_guardados.get(producto.lower())
+        if precio:
+            self.costo_producto.set(precio["Costo"])
+            self.recargo_producto.set(precio["Recargo"])
+            self.calcular_precio()
+
+    def guardar_precio(self):
+        producto = self.producto_para_precio.get()
+        try:
+            costo = self.convertir_numero(self.costo_producto.get())
+            recargo = self.convertir_numero(self.recargo_producto.get())
+        except ValueError:
+            self.resultado_precio.config(text="Ingresá números válidos antes de guardar.")
+            return
+
+        if not producto or costo <= 0 or recargo < 0:
+            self.resultado_precio.config(text="Elegí un producto e ingresá un costo positivo.")
+            return
+
+        precio_sugerido = round(costo * (1 + recargo / 100))
+        self.precios_guardados[producto.lower()] = {
+            "Producto": producto,
+            "Costo": f"{costo:g}",
+            "Recargo": f"{recargo:g}",
+            "Precio sugerido": f"{precio_sugerido:g}",
+        }
+        with ARCHIVO_PRECIOS.open("w", encoding="utf-8-sig", newline="") as archivo:
+            escritor = csv.DictWriter(
+                archivo,
+                fieldnames=["Producto", "Costo", "Recargo", "Precio sugerido"],
+                delimiter=";",
+            )
+            escritor.writeheader()
+            escritor.writerows(sorted(self.precios_guardados.values(), key=lambda fila: fila["Producto"].lower()))
+        self.resultado_precio.config(
+            text=f'Precio de "{producto}" guardado: ${self.formatear_moneda(precio_sugerido)}.'
         )
 
     @staticmethod
