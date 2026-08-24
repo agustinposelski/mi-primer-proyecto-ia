@@ -1,5 +1,6 @@
 import re
 import csv
+from pathlib import Path
 
 
 COLUMNAS = [
@@ -78,9 +79,28 @@ CATEGORIAS_POR_PALABRA = {
 }
 
 
+def cargar_catalogo_local():
+    """Lee las categorías que el local puede ampliar sin editar el programa."""
+    archivo_catalogo = Path(__file__).with_name("catalogo_productos.csv")
+    if not archivo_catalogo.exists():
+        return []
+
+    with archivo_catalogo.open(encoding="utf-8-sig", newline="") as archivo:
+        lector = csv.DictReader(archivo, delimiter=";")
+        filas = list(lector)
+
+    return sorted(filas, key=lambda fila: len(fila["Palabra clave"]), reverse=True)
+
+
+CATALOGO_LOCAL = cargar_catalogo_local()
+
+
 def clasificar_producto(producto):
     """Asigna una categoría conocida o deja el producto pendiente de clasificar."""
     producto_normalizado = producto.lower()
+    for fila in CATALOGO_LOCAL:
+        if fila["Palabra clave"].lower() in producto_normalizado:
+            return fila["Categoría"]
     for palabra, categoria in CATEGORIAS_POR_PALABRA.items():
         if palabra in producto_normalizado:
             return categoria
