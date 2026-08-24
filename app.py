@@ -7,7 +7,21 @@ original: suma una forma más cómoda de usarlo.
 import tkinter as tk
 from tkinter import ttk
 
-from saludo import COLUMNAS, guardar_csv, interpretar_anotacion
+from saludo import COLUMNAS, guardar_categoria_en_catalogo, guardar_csv, interpretar_anotacion
+
+
+CATEGORIAS_DISPONIBLES = [
+    "Electricidad e iluminación",
+    "Gas y calefacción",
+    "Sanitarios y plomería",
+    "Pintura",
+    "Seguridad industrial",
+    "Herramientas y accesorios",
+    "Construcción y albañilería",
+    "Adhesivos, lubricantes y consumibles",
+    "Productos de Jardinería",
+    "Varios",
+]
 
 
 class AplicacionInventario:
@@ -17,6 +31,8 @@ class AplicacionInventario:
         self.ventana.geometry("1080x650")
         self.ventana.minsize(800, 500)
         self.filas = []
+        self.producto_a_clasificar = tk.StringVar()
+        self.categoria_elegida = tk.StringVar()
         self.crear_interfaz()
 
     def crear_interfaz(self):
@@ -58,6 +74,28 @@ class AplicacionInventario:
         self.estado = ttk.Label(contenedor, text="Todavía no se procesó ningún inventario.")
         self.estado.pack(anchor="w", pady=(10, 0))
 
+        clasificacion = ttk.LabelFrame(contenedor, text="Clasificar producto pendiente", padding=10)
+        clasificacion.pack(fill="x", pady=(10, 0))
+        ttk.Label(clasificacion, text="Producto sin categoría:").grid(row=0, column=0, sticky="w")
+        self.selector_producto = ttk.Combobox(
+            clasificacion, textvariable=self.producto_a_clasificar, state="readonly", width=32
+        )
+        self.selector_producto.grid(row=0, column=1, padx=8, sticky="ew")
+        ttk.Label(clasificacion, text="Categoría:").grid(row=0, column=2, sticky="w")
+        self.selector_categoria = ttk.Combobox(
+            clasificacion,
+            textvariable=self.categoria_elegida,
+            values=CATEGORIAS_DISPONIBLES,
+            state="readonly",
+            width=32,
+        )
+        self.selector_categoria.grid(row=0, column=3, padx=8, sticky="ew")
+        ttk.Button(clasificacion, text="Guardar categoría", command=self.guardar_categoria).grid(
+            row=0, column=4, sticky="e"
+        )
+        clasificacion.columnconfigure(1, weight=1)
+        clasificacion.columnconfigure(3, weight=1)
+
     def procesar_inventario(self):
         anotaciones = self.entrada.get("1.0", "end").strip().splitlines()
         self.filas = []
@@ -77,6 +115,9 @@ class AplicacionInventario:
             self.tabla.insert("", "end", values=[fila[columna] for columna in COLUMNAS])
 
         guardar_csv(self.filas)
+        pendientes = sorted({fila["Producto"] for fila in self.filas if fila["Categoría"] == "Sin categoría"})
+        self.selector_producto["values"] = pendientes
+        self.producto_a_clasificar.set(pendientes[0] if pendientes else "")
         cantidad = len(self.filas)
         self.estado.config(
             text=f"Se procesaron {cantidad} producto(s). El CSV se guardó automáticamente como inventario_organizado.csv."
@@ -88,6 +129,20 @@ class AplicacionInventario:
         for item in self.tabla.get_children():
             self.tabla.delete(item)
         self.estado.config(text="Podés escribir nuevas anotaciones.")
+        self.selector_producto["values"] = []
+        self.producto_a_clasificar.set("")
+
+    def guardar_categoria(self):
+        producto = self.producto_a_clasificar.get()
+        categoria = self.categoria_elegida.get()
+        if not producto or not categoria:
+            self.estado.config(text="Elegí un producto pendiente y una categoría antes de guardar.")
+            return
+
+        guardar_categoria_en_catalogo(producto, categoria)
+        self.procesar_inventario()
+        self.categoria_elegida.set("")
+        self.estado.config(f'"{producto}" quedó guardado en el catálogo como "{categoria}".')
 
 
 if __name__ == "__main__":

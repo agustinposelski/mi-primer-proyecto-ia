@@ -95,6 +95,29 @@ def cargar_catalogo_local():
 CATALOGO_LOCAL = cargar_catalogo_local()
 
 
+def guardar_categoria_en_catalogo(palabra_clave, categoria):
+    """Agrega o actualiza una categoría elegida desde la aplicación."""
+    global CATALOGO_LOCAL
+    palabra_clave = palabra_clave.strip()
+    archivo_catalogo = Path(__file__).with_name("catalogo_productos.csv")
+    filas = [fila.copy() for fila in CATALOGO_LOCAL]
+
+    for fila in filas:
+        if fila["Palabra clave"].lower() == palabra_clave.lower():
+            fila["Categoría"] = categoria
+            break
+    else:
+        filas.append({"Palabra clave": palabra_clave, "Categoría": categoria})
+
+    filas = sorted(filas, key=lambda fila: fila["Palabra clave"].lower())
+    with archivo_catalogo.open("w", encoding="utf-8-sig", newline="") as archivo:
+        escritor = csv.DictWriter(archivo, fieldnames=["Palabra clave", "Categoría"], delimiter=";")
+        escritor.writeheader()
+        escritor.writerows(filas)
+
+    CATALOGO_LOCAL = sorted(filas, key=lambda fila: len(fila["Palabra clave"]), reverse=True)
+
+
 def clasificar_producto(producto):
     """Asigna una categoría conocida o deja el producto pendiente de clasificar."""
     producto_normalizado = producto.lower()
