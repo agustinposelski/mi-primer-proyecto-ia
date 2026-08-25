@@ -1,2 +1,3 @@
-﻿Producto;Medida;Tipo;Categoría;Cantidad;Unidad;Precio sugerido;Proveedor a consultar;Información faltante
-Reflector;"=""20 W""";Sin tipo;Electricidad e iluminación;2;unidad;$11.900;Pendiente;Confirmar cantidad y proveedor
+﻿Producto;Medida;Tipo;Categoría;Cantidad;Unidad;Precio sugerido
+Tanza;"=""3 mm""";cuadrada;Productos de Jardinería;1;rollo;Sin precio
+Caño corrugado PVC;"=""3/4""";electricidad;Electricidad e iluminación;2;rollos;Sin precio

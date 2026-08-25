@@ -11,8 +11,6 @@ COLUMNAS = [
     "Cantidad",
     "Unidad",
     "Precio sugerido",
-    "Proveedor a consultar",
-    "Información faltante",
 ]
 
 
@@ -160,8 +158,6 @@ def interpretar_anotacion(anotacion):
                 "Cantidad": 1,
                 "Unidad": "unidad",
                 "Precio sugerido": "Sin precio",
-                "Proveedor a consultar": "Pendiente",
-                "Información faltante": "Confirmar cantidad y proveedor",
             }
             for medida in medidas
         ]
@@ -187,8 +183,6 @@ def interpretar_anotacion(anotacion):
                     "Cantidad": int(cantidad),
                     "Unidad": "unidad",
                     "Precio sugerido": "Sin precio",
-                    "Proveedor a consultar": "Pendiente",
-                    "Información faltante": "Confirmar cantidad y proveedor",
                 }
             )
         return filas
@@ -248,8 +242,6 @@ def interpretar_anotacion(anotacion):
         "Cantidad": cantidad,
         "Unidad": unidad,
         "Precio sugerido": "Sin precio",
-        "Proveedor a consultar": "Pendiente",
-        "Información faltante": "Confirmar cantidad y proveedor",
     }
 
 
