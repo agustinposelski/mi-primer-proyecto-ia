@@ -135,6 +135,11 @@ class AplicacionInventario:
             else:
                 self.filas.append(resultado)
 
+        for fila in self.filas:
+            precio = self.precios_guardados.get(fila["Producto"].lower())
+            if precio:
+                fila["Precio sugerido"] = f'${self.formatear_moneda(float(precio["Precio sugerido"]))}'
+
         for item in self.tabla.get_children():
             self.tabla.delete(item)
         for fila in self.filas:
@@ -242,6 +247,10 @@ class AplicacionInventario:
             )
             escritor.writeheader()
             escritor.writerows(sorted(self.precios_guardados.values(), key=lambda fila: fila["Producto"].lower()))
+        self.resultado_precio.config(
+            text=f'Precio de "{producto}" guardado: ${self.formatear_moneda(precio_sugerido)}.'
+        )
+        self.procesar_inventario()
         self.resultado_precio.config(
             text=f'Precio de "{producto}" guardado: ${self.formatear_moneda(precio_sugerido)}.'
         )

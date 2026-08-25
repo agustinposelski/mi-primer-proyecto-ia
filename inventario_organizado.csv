@@ -1,2 +1,2 @@
-﻿Producto;Medida;Tipo;Categoría;Cantidad;Unidad;Proveedor a consultar;Información faltante
-Reflector;"=""20 W""";Sin tipo;Electricidad e iluminación;2;unidad;Pendiente;Confirmar cantidad y proveedor
+﻿Producto;Medida;Tipo;Categoría;Cantidad;Unidad;Precio sugerido;Proveedor a consultar;Información faltante
+Reflector;"=""20 W""";Sin tipo;Electricidad e iluminación;2;unidad;$11.900;Pendiente;Confirmar cantidad y proveedor

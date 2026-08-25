@@ -10,6 +10,7 @@ COLUMNAS = [
     "Categoría",
     "Cantidad",
     "Unidad",
+    "Precio sugerido",
     "Proveedor a consultar",
     "Información faltante",
 ]
@@ -158,6 +159,7 @@ def interpretar_anotacion(anotacion):
                 "Categoría": clasificar_producto(producto),
                 "Cantidad": 1,
                 "Unidad": "unidad",
+                "Precio sugerido": "Sin precio",
                 "Proveedor a consultar": "Pendiente",
                 "Información faltante": "Confirmar cantidad y proveedor",
             }
@@ -184,6 +186,7 @@ def interpretar_anotacion(anotacion):
                     "Categoría": clasificar_producto(producto),
                     "Cantidad": int(cantidad),
                     "Unidad": "unidad",
+                    "Precio sugerido": "Sin precio",
                     "Proveedor a consultar": "Pendiente",
                     "Información faltante": "Confirmar cantidad y proveedor",
                 }
@@ -244,6 +247,7 @@ def interpretar_anotacion(anotacion):
         "Categoría": clasificar_producto(producto),
         "Cantidad": cantidad,
         "Unidad": unidad,
+        "Precio sugerido": "Sin precio",
         "Proveedor a consultar": "Pendiente",
         "Información faltante": "Confirmar cantidad y proveedor",
     }
