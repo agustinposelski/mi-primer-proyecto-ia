@@ -26,6 +26,7 @@ CATEGORIAS_DISPONIBLES = [
 ]
 
 ARCHIVO_PRECIOS = Path(__file__).with_name("precios_productos.csv")
+ARCHIVO_STOCK = Path(__file__).with_name("stock_permanente.csv")
 
 
 class AplicacionInventario:
@@ -63,6 +64,8 @@ class AplicacionInventario:
         acciones.pack(fill="x", pady=10)
         ttk.Button(acciones, text="Procesar inventario", command=self.procesar_inventario).pack(side="left")
         ttk.Button(acciones, text="Limpiar", command=self.limpiar).pack(side="left", padx=(8, 0))
+        ttk.Button(acciones, text="Sumar al stock", command=self.sumar_al_stock).pack(side="left", padx=(8, 0))
+        ttk.Button(acciones, text="Ver stock guardado", command=self.ver_stock_guardado).pack(side="left", padx=(8, 0))
 
         tabla_contenedor = ttk.Frame(contenedor)
         tabla_contenedor.pack(fill="both", expand=True)
@@ -182,6 +185,49 @@ class AplicacionInventario:
         self.procesar_inventario()
         self.categoria_elegida.set("")
         self.estado.config(f'"{producto}" quedó guardado en el catálogo como "{categoria}".')
+
+    def cargar_stock(self):
+        if not ARCHIVO_STOCK.exists():
+            return []
+        with ARCHIVO_STOCK.open(encoding="utf-8-sig", newline="") as archivo:
+            return list(csv.DictReader(archivo, delimiter=";"))
+
+    @staticmethod
+    def clave_stock(fila):
+        return (fila["Producto"].lower(), fila["Medida"], fila["Tipo"], fila["Unidad"].lower())
+
+    def sumar_al_stock(self):
+        if not self.filas:
+            self.estado.config(text="Primero procesá un inventario para poder sumarlo al stock.")
+            return
+
+        stock = self.cargar_stock()
+        indice = {self.clave_stock(fila): fila for fila in stock}
+        for fila_actual in self.filas:
+            clave = self.clave_stock(fila_actual)
+            if clave in indice:
+                fila_guardada = indice[clave]
+                fila_guardada["Cantidad"] = int(fila_guardada["Cantidad"]) + int(fila_actual["Cantidad"])
+                if fila_actual["Precio sugerido"] != "Sin precio":
+                    fila_guardada["Precio sugerido"] = fila_actual["Precio sugerido"]
+            else:
+                nueva_fila = {columna: fila_actual[columna] for columna in COLUMNAS}
+                stock.append(nueva_fila)
+                indice[clave] = nueva_fila
+
+        with ARCHIVO_STOCK.open("w", encoding="utf-8-sig", newline="") as archivo:
+            escritor = csv.DictWriter(archivo, fieldnames=COLUMNAS, delimiter=";")
+            escritor.writeheader()
+            escritor.writerows(stock)
+        self.estado.config(text=f"Se sumaron {len(self.filas)} producto(s) al stock permanente.")
+
+    def ver_stock_guardado(self):
+        stock = self.cargar_stock()
+        for item in self.tabla.get_children():
+            self.tabla.delete(item)
+        for fila in stock:
+            self.tabla.insert("", "end", values=[fila[columna] for columna in COLUMNAS])
+        self.estado.config(text=f"Stock permanente: {len(stock)} producto(s) diferentes.")
 
     def calcular_precio(self):
         producto = self.producto_para_precio.get()
